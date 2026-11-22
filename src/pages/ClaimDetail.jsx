@@ -20,6 +20,7 @@ export default function ClaimDetail() {
   const [claim, setClaim] = useState(null)
   const [params] = useSearchParams()
   const [tab, setTab] = useState(TABS.includes(params.get('tab')) ? params.get('tab') : '기본정보')
+  useEffect(() => { const t = params.get('tab'); if (TABS.includes(t)) setTab(t) }, [params])
   const [toast, toastEl] = useToast()
 
   const load = useCallback(() =>

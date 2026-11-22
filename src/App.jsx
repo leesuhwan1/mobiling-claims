@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import { supabase, ROLES } from './lib'
+import { supabase, ROLES, IS_DEMO } from './lib'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Claims from './pages/Claims'
@@ -63,6 +63,7 @@ export default function App() {
               </div>
             </aside>
             <main className="main">
+              {IS_DEMO && <div className="demo-bar">미리보기 · 예시 데이터로 동작하며 새로고침하면 처음 상태로 돌아갑니다. 실제 업무는 mobiling-claims.vercel.app 에서 하세요.</div>}
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/claims" element={<Claims />} />
