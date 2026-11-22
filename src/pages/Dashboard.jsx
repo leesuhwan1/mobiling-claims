@@ -3,12 +3,15 @@ import { Link } from 'react-router-dom'
 import { supabase, STATUSES, OPEN_STATUSES, won, fmtDate, fmtDateTime } from '../lib'
 import { useAuth } from '../App'
 import { StatusBadge } from '../ui'
+import { exportMonthlyReport } from '../monthlyReport'
 
 export default function Dashboard() {
   const { profile } = useAuth()
   const [claims, setClaims] = useState([])
   const [schedules, setSchedules] = useState([])
   const [sums, setSums] = useState({ claimed: 0, approved: 0, payable: 0 })
+  const [year, setYear] = useState(String(new Date().getFullYear()))
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     supabase.from('claims')
@@ -43,7 +46,17 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h2>대시보드</h2>
+      <div className="head">
+        <h2>대시보드</h2>
+        <div className="actions">
+          <select value={year} onChange={(e) => setYear(e.target.value)} style={{ width: 'auto' }}>
+            {[0, 1, 2].map((d) => { const y = String(new Date().getFullYear() - d); return <option key={y} value={y}>{y}년</option> })}
+          </select>
+          <button disabled={exporting} onClick={async () => { setExporting(true); try { await exportMonthlyReport(year) } finally { setExporting(false) } }}>
+            {exporting ? '만드는 중…' : '월별 실적 엑셀'}
+          </button>
+        </div>
+      </div>
       <div className="tiles">
         <Tile label="진행중 사건" value={open.length} />
         <Tile label="내 담당" value={mine.length} />

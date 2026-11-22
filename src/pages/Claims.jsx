@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase, STATUSES, COVERAGES, fmtDate } from '../lib'
 import { StatusBadge, useRefs, Select } from '../ui'
 import { useAuth } from '../App'
+import { exportXlsx } from '../excel'
 
 export default function Claims() {
   const [params, setParams] = useSearchParams()
@@ -21,7 +22,7 @@ export default function Claims() {
   useEffect(() => {
     setLoading(true)
     let query = supabase.from('claims')
-      .select('id, claim_no, insurer_claim_no, coverage, status, accident_at, insured_name, victim_name, received_at, due_date, insurers(name), profiles:profiles!claims_assigned_to_fkey(name), vehicles(plate_no)')
+      .select('id, claim_no, insurer_claim_no, coverage, status, accident_at, insured_name, victim_name, received_at, due_date, accident_place, insurers(name), profiles:profiles!claims_assigned_to_fkey(name), vehicles(plate_no), assessments(claimed_total, approved_total, payable_amount, status)')
       .order('id', { ascending: false }).limit(500)
     if (status) query = query.eq('status', status)
     if (insurer) query = query.eq('insurer_id', insurer)
@@ -38,12 +39,30 @@ export default function Claims() {
   }, [params, profile?.id])
 
   const today = new Date().toISOString().slice(0, 10)
+  const asmt = (c) => (Array.isArray(c.assessments) ? c.assessments[0] : c.assessments) || {}
+
+  function download() {
+    exportXlsx(`사건목록_${today}.xlsx`, [{
+      name: '사건목록',
+      columns: ['접수번호', '접수일', '보험사', '보험사 사고번호', '종목', '사고일', '사고장소', '피보험자', '피해자', '차량번호', '담당자', '상태', '처리기한', '청구 수리비', '인정 수리비', '지급액', '사정서'],
+      rows: rows.map((c) => {
+        const a = asmt(c)
+        return [c.claim_no, c.received_at, c.insurers?.name, c.insurer_claim_no, c.coverage, c.accident_at ? fmtDate(c.accident_at) : null,
+          c.accident_place, c.insured_name, c.victim_name, c.vehicles?.map((v) => v.plate_no).join(', '), c.profiles?.name, c.status,
+          c.due_date, a.claimed_total ?? null, a.approved_total ?? null, a.payable_amount ?? null, a.status || '미작성']
+      }),
+      money: [13, 14, 15],
+    }])
+  }
 
   return (
     <div>
       <div className="head">
         <h2>사건관리</h2>
-        <Link className="btn primary" to="/claims/new">+ 사고접수</Link>
+        <div className="actions">
+          <button onClick={download} disabled={!rows.length}>엑셀 내려받기</button>
+          <Link className="btn primary" to="/claims/new">+ 사고접수</Link>
+        </div>
       </div>
       <div className="filters card">
         <form onSubmit={(e) => { e.preventDefault(); set('q', q.trim()) }}>
