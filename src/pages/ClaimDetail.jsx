@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, STATUSES, COVERAGES, clean, toLocalInput, fromLocalInput, fmtDate, fmtDateTime } from '../lib'
 import { Field, Select, StatusBadge, useRefs, useToast } from '../ui'
 import { useAuth } from '../App'
@@ -8,8 +8,9 @@ import Estimates from './tabs/Estimates'
 import Assessment from './tabs/Assessment'
 import ScheduleList from './tabs/ScheduleList'
 import Attachments from './tabs/Attachments'
+import Fee from './tabs/Fee'
 
-const TABS = ['기본정보', '차량', '첨부파일', '견적검토', '손해사정서', '일정', '처리이력']
+const TABS = ['기본정보', '차량', '첨부파일', '견적검토', '손해사정서', '수수료', '일정', '처리이력']
 
 export default function ClaimDetail() {
   const { id } = useParams()
@@ -17,7 +18,8 @@ export default function ClaimDetail() {
   const { isAdmin } = useAuth()
   const [refs, reloadRefs] = useRefs()
   const [claim, setClaim] = useState(null)
-  const [tab, setTab] = useState('기본정보')
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState(TABS.includes(params.get('tab')) ? params.get('tab') : '기본정보')
   const [toast, toastEl] = useToast()
 
   const load = useCallback(() =>
@@ -65,6 +67,7 @@ export default function ClaimDetail() {
       {tab === '첨부파일' && <Attachments claimId={id} toast={toast} />}
       {tab === '견적검토' && <Estimates claim={claim} refs={refs} toast={toast} reloadRefs={reloadRefs} />}
       {tab === '손해사정서' && <Assessment claim={claim} toast={toast} onStatus={load} />}
+      {tab === '수수료' && <Fee claim={claim} toast={toast} />}
       {tab === '일정' && <ScheduleList claimId={id} refs={refs} toast={toast} />}
       {tab === '처리이력' && <History claimId={id} />}
     </div>

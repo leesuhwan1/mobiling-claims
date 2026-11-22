@@ -11,6 +11,7 @@ import Schedules from './pages/Schedules'
 import Masters from './pages/Masters'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
+import Billing from './pages/Billing'
 
 const AuthCtx = createContext(null)
 export const useAuth = () => useContext(AuthCtx)
@@ -48,6 +49,7 @@ export default function App() {
                 <NavLink to="/claims">사건관리</NavLink>
                 <NavLink to="/claims/new">사고접수</NavLink>
                 <NavLink to="/schedules">일정</NavLink>
+                <NavLink to="/billing">청구관리</NavLink>
                 <NavLink to="/masters">보험사·정비공장</NavLink>
                 {isAdmin && <NavLink to="/users">사용자 관리</NavLink>}
                 <NavLink to="/settings">설정</NavLink>
@@ -65,6 +67,7 @@ export default function App() {
                 <Route path="/claims/new" element={<ClaimNew />} />
                 <Route path="/claims/:id" element={<ClaimDetail />} />
                 <Route path="/schedules" element={<Schedules />} />
+                <Route path="/billing" element={<Billing />} />
                 <Route path="/masters" element={<Masters />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/users" element={isAdmin ? <Users /> : <Navigate to="/" />} />
