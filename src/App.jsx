@@ -12,6 +12,7 @@ import Masters from './pages/Masters'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
 import Billing from './pages/Billing'
+import Notifications from './Notifications'
 
 const AuthCtx = createContext(null)
 export const useAuth = () => useContext(AuthCtx)
@@ -44,6 +45,7 @@ export default function App() {
           <div className="layout">
             <aside className="side">
               <div className="brand">모빌링손해사정<small>차량 손해사정 업무시스템</small></div>
+              <Notifications userId={session.user.id} />
               <nav>
                 <NavLink to="/" end>대시보드</NavLink>
                 <NavLink to="/claims">사건관리</NavLink>
