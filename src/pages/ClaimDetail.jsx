@@ -7,8 +7,9 @@ import Vehicles from './tabs/Vehicles'
 import Estimates from './tabs/Estimates'
 import Assessment from './tabs/Assessment'
 import ScheduleList from './tabs/ScheduleList'
+import Attachments from './tabs/Attachments'
 
-const TABS = ['기본정보', '차량', '견적검토', '손해사정서', '일정', '처리이력']
+const TABS = ['기본정보', '차량', '첨부파일', '견적검토', '손해사정서', '일정', '처리이력']
 
 export default function ClaimDetail() {
   const { id } = useParams()
@@ -61,6 +62,7 @@ export default function ClaimDetail() {
       </div>
       {tab === '기본정보' && <Info claim={claim} refs={refs} onSaved={() => { toast('저장되었습니다'); load() }} />}
       {tab === '차량' && <Vehicles claimId={id} refs={refs} toast={toast} />}
+      {tab === '첨부파일' && <Attachments claimId={id} toast={toast} />}
       {tab === '견적검토' && <Estimates claim={claim} refs={refs} toast={toast} reloadRefs={reloadRefs} />}
       {tab === '손해사정서' && <Assessment claim={claim} toast={toast} onStatus={load} />}
       {tab === '일정' && <ScheduleList claimId={id} refs={refs} toast={toast} />}
