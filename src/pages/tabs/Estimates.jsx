@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, won, toInt, ITEM_CATEGORIES, OPERATIONS, fmtDate } from '../../lib'
 import { Field, Select } from '../../ui'
+import EstimateImport from './EstimateImport'
 
 const newItem = (seq) => ({ _key: Math.random(), seq, category: '부품', item_name: '', operation: '교환', qty: 1, unit_price: 0, claimed_amount: 0, approved_amount: null, adjust_reason: '' })
 
@@ -9,6 +10,7 @@ export default function Estimates({ claim, refs, toast }) {
   const [vehicles, setVehicles] = useState([])
   const [sel, setSel] = useState(null)
   const [creating, setCreating] = useState(null)
+  const [importing, setImporting] = useState(false)
 
   const load = async (selectId) => {
     const [e, v] = await Promise.all([
@@ -40,9 +42,12 @@ export default function Estimates({ claim, refs, toast }) {
       <div className="card">
         <div className="head">
           <h3>견적서</h3>
-          <button onClick={() => setCreating({ vehicle_id: vehicles[0]?.id || '', repair_shop_id: vehicles[0]?.repair_shop_id || '', estimate_date: new Date().toISOString().slice(0, 10) })}>+ 견적서 등록</button>
+          <div className="actions">
+          <button className="primary" onClick={() => { setCreating(null); setImporting(true) }}>AOS 견적서 불러오기</button>
+          <button onClick={() => setCreating({ vehicle_id: vehicles[0]?.id || '', repair_shop_id: vehicles[0]?.repair_shop_id || '', estimate_date: new Date().toISOString().slice(0, 10) })}>+ 직접 등록</button>
+          </div>
         </div>
-        {list.length === 0 && !creating && <p className="muted">등록된 견적서가 없습니다. 정비공장 견적서를 등록해 항목별 검토를 시작하세요.</p>}
+        {list.length === 0 && !creating && <p className="muted">등록된 견적서가 없습니다. 「AOS 견적서 불러오기」로 견적서 파일을 올리거나 직접 등록해 항목별 검토를 시작하세요.</p>}
         <div className="chips">
           {list.map((e) => {
             const c = e.estimate_items.reduce((a, i) => a + i.claimed_amount, 0)
@@ -68,7 +73,9 @@ export default function Estimates({ claim, refs, toast }) {
           </form>
         )}
       </div>
-      {sel && <ItemEditor key={sel} estimateId={sel} toast={toast} onSaved={() => load(sel)} onDeleted={() => { setSel(null); load() }} />}
+      {importing && <EstimateImport claim={claim} vehicles={vehicles} shops={refs.shops} estimates={list} toast={toast}
+        onClose={() => setImporting(false)} onDone={(id) => { setImporting(false); load(id) }} />}
+      {sel && !importing && <ItemEditor key={sel} estimateId={sel} toast={toast} onSaved={() => load(sel)} onDeleted={() => { setSel(null); load() }} />}
     </div>
   )
 }
@@ -206,7 +213,12 @@ function ItemEditor({ estimateId, toast, onSaved, onDeleted }) {
       </div>
       <div className="catsum">
         {byCat.map(([c, a, b]) => <div key={c}><span>{c}</span><b>{won(a)}</b><small>인정 {won(b)}</small></div>)}
-        <div><span>삭감률</span><b>{claimed ? (((claimed - approved) / claimed) * 100).toFixed(1) : '0.0'}%</b><small>청구 대비</small></div>
+        {(() => {
+          const done = items.filter((i) => i.approved_amount != null && i.approved_amount !== '')
+          const c = done.reduce((a, i) => a + (toInt(i.claimed_amount) || 0), 0)
+          const a = done.reduce((x, i) => x + (toInt(i.approved_amount) || 0), 0)
+          return <div><span>삭감률</span><b>{c ? (((c - a) / c) * 100).toFixed(1) : '0.0'}%</b><small>검토한 {done.length}개 항목 기준</small></div>
+        })()}
       </div>
       <Field label="검토 메모" wide><textarea rows={2} value={est.memo || ''} onChange={(e) => { setEst({ ...est, memo: e.target.value }); setDirty(true) }} /></Field>
       <div className="actions" style={{ marginTop: 12 }}>
